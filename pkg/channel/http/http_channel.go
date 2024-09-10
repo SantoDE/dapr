@@ -235,10 +235,10 @@ func (h *Channel) invokeMethodV1(ctx context.Context, req *invokev1.InvokeMethod
 		W: &bytes.Buffer{},
 	}
 	execPipeline := h.middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Send request to user application
-		// (Body is closed below, but linter isn't detecting that)
-		//nolint:bodyclose
-		clientResp, clientErr := h.client.Do(r)
+		fmt.Printf("Doing a new HTTP Client \n")
+		client := &http.Client{}
+		client.Transport = &http.Transport{DisableKeepAlives: true}
+		clientResp, clientErr := client.Do(r)
 		if clientResp != nil {
 			copyHeader(w.Header(), clientResp.Header)
 			w.WriteHeader(clientResp.StatusCode)
@@ -247,7 +247,9 @@ func (h *Channel) invokeMethodV1(ctx context.Context, req *invokev1.InvokeMethod
 		if clientErr != nil {
 			err = clientErr
 		}
+		defer client.CloseIdleConnections()
 	}))
+	//im ending here
 	execPipeline.ServeHTTP(rw, channelReq)
 	resp := rw.Result() //nolint:bodyclose
 

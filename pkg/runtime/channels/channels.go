@@ -277,10 +277,13 @@ func (c *Channels) getHTTPEndpointAppChannel(endpoint httpendpapi.HTTPEndpoint) 
 		Timeout: 15 * time.Second,
 	}
 
+	//@TODO: Manuel figure out
 	tr := http.DefaultTransport.(*http.Transport).Clone()
 	tr.TLSHandshakeTimeout = 15 * time.Second
 	tr.TLSClientConfig = tlsConfig
 	tr.DialContext = dialer.DialContext
+	tr.MaxIdleConns = -1
+	tr.DisableKeepAlives = true
 
 	conf.Client = &http.Client{
 		Timeout:   0,
@@ -321,6 +324,8 @@ func appHTTPClient(connConfig config.AppConnectionConfig, globalConfig *config.C
 			MaxConnsPerHost:        1024,
 			MaxIdleConns:           64, // A local channel connects to a single host
 			MaxIdleConnsPerHost:    64,
+			DisableKeepAlives:      true,
+			IdleConnTimeout:        1 * time.Millisecond,
 		}
 	}
 
